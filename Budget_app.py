@@ -32,7 +32,9 @@ CATEGORIES = [
     "Dining",
     "Shopping",
     "Rent",
-    "Utilities",
+    "Utilities(Gas+Electric)",
+    "Fuel",
+    "Phone and Wifi",
     "Car Insurance",
     "Miscellaneous"
 ]
