@@ -7,14 +7,32 @@ import plotly.express as px
 
 st.set_page_config(page_title="Budget Tracker", layout="wide")
 
+# --- Password Protection ---
+PASSWORD = "abhi2024"  # Change this to your own password
+
+def check_password():
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if not st.session_state.authenticated:
+        st.title("🔒 Budget Tracker Login")
+        password = st.text_input("Enter password", type="password")
+        if st.button("Login"):
+            if password == PASSWORD:
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("Incorrect password. Try again.")
+        st.stop()
+
+check_password()
+
 CATEGORIES = [
     "Groceries",
     "Dining",
     "Shopping",
     "Rent",
-    "Utilities(Gas and Electric)",
-    "Phone Bill(s)+ wifi",
-    "Fuel",
+    "Utilities",
     "Car Insurance",
     "Miscellaneous"
 ]
@@ -389,5 +407,4 @@ else:
             "annual_budget": st.column_config.NumberColumn("Annual Budget", format="$%.2f"),
             "vs_annual_budget": st.column_config.NumberColumn("Remaining vs Budget", format="$%.2f"),
         }
-
     )
