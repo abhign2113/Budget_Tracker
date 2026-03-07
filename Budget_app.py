@@ -36,6 +36,7 @@ CATEGORIES = [
     "Fuel",
     "Phone and Wifi",
     "Car Insurance",
+    "Travel"
     "Miscellaneous"
 ]
 
