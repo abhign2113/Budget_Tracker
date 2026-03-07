@@ -12,7 +12,8 @@ CATEGORIES = [
     "Dining",
     "Shopping",
     "Rent",
-    "Utilities",
+    "Utilities(Gas and Electric)",
+    "Phone Bill(s)+ wifi",
     "Fuel",
     "Car Insurance",
     "Miscellaneous"
@@ -388,4 +389,5 @@ else:
             "annual_budget": st.column_config.NumberColumn("Annual Budget", format="$%.2f"),
             "vs_annual_budget": st.column_config.NumberColumn("Remaining vs Budget", format="$%.2f"),
         }
+
     )
