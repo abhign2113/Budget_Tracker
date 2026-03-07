@@ -8,7 +8,7 @@ import plotly.express as px
 st.set_page_config(page_title="Budget Tracker", layout="wide")
 
 # --- Password Protection ---
-PASSWORD = "abhi2024"  # Change this to your own password
+PASSWORD = "1991"  # Change this to your own password
 
 def check_password():
     if "authenticated" not in st.session_state:
