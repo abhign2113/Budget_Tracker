@@ -154,6 +154,22 @@ with st.form("extra_income_form", clear_on_submit=True):
     ei_desc = ei_col2.text_input("Description (e.g. Sold TV)")
     ei_amt = ei_col3.number_input("Amount", min_value=0.0, step=1.0, format="%.2f", key="ei_amt")
     ei_submitted = st.form_submit_button("Add Extra Income")
+    
+# Show extra income entries for the month with delete option
+extra_income_m = load_extra_income(int(year), int(month))
+if not extra_income_m.empty:
+    st.write("Extra income this month:")
+    extra_income_m = extra_income_m.reset_index()
+    for i, row in extra_income_m.iterrows():
+        col1, col2, col3, col4 = st.columns([2, 3, 2, 1])
+        col1.write(row["date"])
+        col2.write(row["description"])
+        col3.write(f"${row['amount']:.2f}")
+        if col4.button("Delete", key=f"ei_del_{i}"):
+            all_ei = pd.read_csv(EXTRA_INCOME_FILE)
+            all_ei = all_ei.drop(row["index"])
+            all_ei.to_csv(EXTRA_INCOME_FILE, index=False)
+            st.rerun()
 
 if ei_submitted:
     if ei_amt <= 0:
