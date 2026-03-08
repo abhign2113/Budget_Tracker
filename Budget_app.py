@@ -43,6 +43,7 @@ CATEGORIES = [
 BUDGET_FILE = "budgets.csv"
 TXN_FILE = "transactions.csv"
 SETTINGS_FILE = "settings.csv"  # stores monthly income
+EXTRA_INCOME_FILE = "extra_income.csv"
 
 
 def load_budgets() -> pd.DataFrame:
@@ -96,6 +97,25 @@ def load_income() -> float:
 def save_income(value: float) -> None:
     pd.DataFrame([{"monthly_income": float(value)}]).to_csv(SETTINGS_FILE, index=False)
 
+def load_extra_income(y, m):
+    if os.path.exists(EXTRA_INCOME_FILE):
+        df = pd.read_csv(EXTRA_INCOME_FILE)
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+        d = pd.to_datetime(df["date"])
+        return df[(d.dt.year == y) & (d.dt.month == m)]
+    return pd.DataFrame(columns=["date", "description", "amount"])
+
+
+
+def save_extra_income(df):
+    if os.path.exists(EXTRA_INCOME_FILE):
+        existing = pd.read_csv(EXTRA_INCOME_FILE)
+        existing["date"] = pd.to_datetime(existing["date"]).dt.date
+        combined = pd.concat([existing, df], ignore_index=True)
+    else:
+        combined = df
+    combined.to_csv(EXTRA_INCOME_FILE, index=False)
+
 
 st.title("💸 Personal Budget Tracker")
 
@@ -126,6 +146,24 @@ if income_col2.button("Save income"):
     st.success("Income saved!")
 
 st.markdown("---")
+
+st.subheader("0b) Log extra income (sales, bonus, etc.)")
+with st.form("extra_income_form", clear_on_submit=True):
+    ei_col1, ei_col2, ei_col3 = st.columns(3)
+    ei_date = ei_col1.date_input("Date", value=today, key="ei_date")
+    ei_desc = ei_col2.text_input("Description (e.g. Sold TV)")
+    ei_amt = ei_col3.number_input("Amount", min_value=0.0, step=1.0, format="%.2f", key="ei_amt")
+    ei_submitted = st.form_submit_button("Add Extra Income")
+
+if ei_submitted:
+    if ei_amt <= 0:
+        st.error("Amount must be greater than 0.")
+    else:
+        new_ei = pd.DataFrame([{"date": ei_date, "description": ei_desc, "amount": float(ei_amt)}])
+        save_extra_income(new_ei)
+        st.success(f"Extra income of ${ei_amt:.2f} added!")
+
+        
 
 
 # --- Load data ---
@@ -203,8 +241,11 @@ total_spent = float(summary["spent"].sum())
 
 # Income-based rollups
 income = float(load_income())
-remaining_after_spend = income - total_spent
-planned_remaining_after_budget = income - total_budget
+extra_income_m = load_extra_income(int(year), int(month))
+total_extra_income = float(extra_income_m["amount"].sum()) if not extra_income_m.empty else 0.0
+total_available = income + total_extra_income
+remaining_after_spend = total_available - total_spent
+planned_remaining_after_budget = total_available - total_budget
 over_under_budget_vs_spend = total_budget - total_spent
 
 summary["savings_in_category"] = summary.apply(
