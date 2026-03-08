@@ -37,6 +37,7 @@ supabase = get_supabase()
 
 CATEGORIES = [
     "Groceries",
+    "Household Utilities",
     "Dining",
     "Shopping",
     "Rent",
