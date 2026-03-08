@@ -207,19 +207,23 @@ remaining_after_spend = income - total_spent
 planned_remaining_after_budget = income - total_budget
 over_under_budget_vs_spend = total_budget - total_spent
 
+summary["savings_in_category"] = summary.apply(
+    lambda row: max(row["monthly_budget"] - row["spent"], 0.0), axis=1
+)
+savings_from_budget = float(summary["savings_in_category"].sum())
+total_projected_remaining = planned_remaining_after_budget + savings_from_budget
 
-# KPI row
 k1, k2, k3, k4 = st.columns(4)
-k1.metric("Monthly income", f"${income:,.2f}")
-k2.metric("Total budget (planned)", f"${total_budget:,.2f}")
-k3.metric("Total spent (actual)", f"${total_spent:,.2f}")
-k4.metric("Remaining after spending", f"${remaining_after_spend:,.2f}")
+k1.metric("Monthly Income", f"${income:,.2f}")
+k2.metric("Total Budget (Planned)", f"${total_budget:,.2f}")
+k3.metric("Total Spent (Actual)", f"${total_spent:,.2f}")
+k4.metric("Remaining After Spending", f"${remaining_after_spend:,.2f}")
 
-k5, k6, k7 = st.columns(3)
-k5.metric("Planned remaining after budget", f"${planned_remaining_after_budget:,.2f}")
-k6.metric("Under/Over budget so far (budget - spent)", f"${over_under_budget_vs_spend:,.2f}")
-k7.metric("Gap to income plan (remaining - planned remaining)", f"${(remaining_after_spend - planned_remaining_after_budget):,.2f}")
-
+k5, k6, k7, k8 = st.columns(4)
+k5.metric("Planned Remaining After Budget", f"${planned_remaining_after_budget:,.2f}")
+k6.metric("Under/Over Budget (Budget - Spent)", f"${over_under_budget_vs_spend:,.2f}")
+k7.metric("Savings From This Month's Budget", f"${savings_from_budget:,.2f}")
+k8.metric("Projected Total Remaining", f"${total_projected_remaining:,.2f}")
 
 # Table + chart
 c1, c2 = st.columns([1.2, 1])
