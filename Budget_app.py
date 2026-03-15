@@ -458,12 +458,17 @@ check_password()
 
 CATEGORIES = [
     "Groceries",
+    "Household Utilities",
+    "Personal Care",
     "Dining",
     "Shopping",
     "Rent",
-    "Utilities",
+    "Utilities(Gas+Electric)",
+    "Fuel",
+    "Phone and Wifi",
     "Car Insurance",
-    "Miscellaneous",
+    "Travel",
+    "Miscellaneous"
 ]
 
 
