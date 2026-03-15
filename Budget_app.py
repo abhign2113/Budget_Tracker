@@ -579,8 +579,8 @@ def save_income(value: float) -> None:
     else:
         supabase.table("settings").insert({"monthly_income": float(value)}).execute()
 
-
-st.title("💸 Personal Budget Tracker")
+#Title
+st.title("Your Personal Budget Tracker")
 
 # --- Sidebar: month selection ---
 today = date.today()
