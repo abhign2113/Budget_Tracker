@@ -739,6 +739,7 @@ k5, k6, k7 = st.columns(3)
 k5.metric("Planned remaining after budget", f"${planned_remaining_after_budget:,.2f}")
 k6.metric("Under/Over budget so far (budget - spent)", f"${over_under_budget_vs_spend:,.2f}")
 k7.metric("Gap to income plan (remaining - planned remaining)", f"${(remaining_after_spend - planned_remaining_after_budget):,.2f}")
+k8.metric("Projected Total Remaining", f"${total_projected_remaining:,.2f}")
 
 
 # Table + chart
