@@ -635,7 +635,7 @@ txns_m = month_filter(txns, int(year), int(month))
 txns_m_filtered = txns_m[txns_m["category"].isin(active_categories)].copy()
 
 # --- Budgets editor ---
-st.subheader("1) Set monthly budgets")
+st.subheader("Set monthly budgets")
 edited = st.data_editor(
     budgets,
     num_rows="fixed",
@@ -654,7 +654,7 @@ st.markdown("---")
 
 
 # --- Add transaction ---
-st.subheader("2) Add a transaction")
+st.subheader("Add Transaction")
 with st.form("add_txn", clear_on_submit=True):
     c1, c2, c3 = st.columns([1, 1, 1])
     txn_date = c1.date_input("Date", value=today)
@@ -688,7 +688,7 @@ st.markdown("---")
 
 
 # --- Summary ---
-st.subheader(f"3) Summary for {int(year)}-{int(month):02d}")
+st.subheader(f"Summary for {int(year)}-{int(month):02d}")
 
 # NOTE: Summary now respects selected categories.
 # spent = (
@@ -772,7 +772,7 @@ with c2:
 st.markdown("---")
 
 # --- Transactions table ---
-st.subheader("4) Transactions (this month)")
+st.subheader("Transactions (this month)")
 
 # NOTE: Transactions table now uses category-filtered month data.
 # if txns_m.empty:
