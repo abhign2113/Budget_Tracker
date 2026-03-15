@@ -607,7 +607,7 @@ st.sidebar.caption("Data is stored in Supabase cloud database.")
 
 
 # --- Income ---
-st.subheader(" Set monthly income (salary)")
+st.subheader(" Set Monthly Income (Mohtly Salary)")
 current_income = load_income()
 income_col1, income_col2 = st.columns([1, 3])
 monthly_income = income_col1.number_input(
@@ -635,7 +635,7 @@ txns_m = month_filter(txns, int(year), int(month))
 txns_m_filtered = txns_m[txns_m["category"].isin(active_categories)].copy()
 
 # --- Budgets editor ---
-st.subheader("Set monthly budgets")
+st.subheader("Set Monthly Budgets")
 edited = st.data_editor(
     budgets,
     num_rows="fixed",
@@ -688,7 +688,7 @@ st.markdown("---")
 
 
 # --- Summary ---
-st.subheader(f"Summary for {int(year)}-{int(month):02d}")
+st.subheader(f"Summary For {int(year)}-{int(month):02d}")
 
 # NOTE: Summary now respects selected categories.
 # spent = (
