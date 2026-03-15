@@ -579,7 +579,7 @@ def save_income(value: float) -> None:
     else:
         supabase.table("settings").insert({"monthly_income": float(value)}).execute()
 
-#Title
+#------------Title-------------------------
 st.title("Your Personal Budget Tracker")
 
 # --- Sidebar: month selection ---
@@ -607,7 +607,7 @@ st.sidebar.caption("Data is stored in Supabase cloud database.")
 
 
 # --- Income ---
-st.subheader("0) Set monthly income (salary)")
+st.subheader(" Set monthly income (salary)")
 current_income = load_income()
 income_col1, income_col2 = st.columns([1, 3])
 monthly_income = income_col1.number_input(
