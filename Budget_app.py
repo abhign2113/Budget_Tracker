@@ -461,38 +461,37 @@ CATEGORIES = [
     "Dining",
     "Shopping",
     "Rent",
-# NOTE: Switched app back to Supabase-backed storage.
-# BUDGET_FILE = "budgets.csv"
-# TXN_FILE = "transactions.csv"
-# SETTINGS_FILE = "settings.csv"  # stores monthly income
-BUDGET_FILE = "budgets.csv"
-TXN_FILE = "transactions.csv"
-SETTINGS_FILE = "settings.csv"
+    "Utilities",
+    "Car Insurance",
+    "Miscellaneous",
+]
 
 
-# NOTE: Supabase client setup (reads credentials from Streamlit secrets).
+# --- Supabase client (reads credentials from Streamlit Cloud secrets) ---
+# NOTE: Switched from local CSV files to Supabase cloud storage.
+# Previous local-file constants kept for reference:
+# BUDGET_FILE   = "budgets.csv"
+# TXN_FILE      = "transactions.csv"
+# SETTINGS_FILE = "settings.csv"
+
 @st.cache_resource
 def get_supabase() -> Client:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
 
-
 supabase = get_supabase()
 
-    "Utilities",
-TXN_FILE = "transactions.csv"
-    # NOTE: Original local-file loader retained for reference.
+
+def load_budgets() -> pd.DataFrame:
+    # NOTE: Original local-file loader (kept for reference):
     # if os.path.exists(BUDGET_FILE):
     #     df = pd.read_csv(BUDGET_FILE)
     #     existing = set(df["category"].tolist())
     #     missing = [c for c in CATEGORIES if c not in existing]
     #     if missing:
-    #         df = pd.concat(
-    #             [df, pd.DataFrame({"category": missing, "monthly_budget": [0.0] * len(missing)})],
-    #             ignore_index=True,
-    #         )
-    #     return df[["category", "monthly_budget"]].sort_values("category").reset_index(drop=True)
+    #         df = pd.concat([df, pd.DataFrame(...)], ignore_index=True)
+    #     return df.sort_values("category").reset_index(drop=True)
     # return pd.DataFrame({"category": CATEGORIES, "monthly_budget": [0.0] * len(CATEGORIES)})
     res = supabase.table("budgets").select("*").execute()
     if res.data:
@@ -506,10 +505,10 @@ TXN_FILE = "transactions.csv"
             )
         return df.sort_values("category").reset_index(drop=True)
     return pd.DataFrame({"category": CATEGORIES, "monthly_budget": [0.0] * len(CATEGORIES)})
-                ignore_index=True,
-            )
-        return df[["category", "monthly_budget"]].sort_values("category").reset_index(drop=True)
-    # NOTE: Original local-file saver retained for reference.
+
+
+def save_budgets(df: pd.DataFrame) -> None:
+    # NOTE: Original local-file saver (kept for reference):
     # df.to_csv(BUDGET_FILE, index=False)
     for _, row in df.iterrows():
         supabase.table("budgets").upsert(
@@ -518,8 +517,8 @@ TXN_FILE = "transactions.csv"
         ).execute()
 
 
-def save_budgets(df: pd.DataFrame) -> None:
-    # NOTE: Original local-file loader retained for reference.
+def load_txns() -> pd.DataFrame:
+    # NOTE: Original local-file loader (kept for reference):
     # if os.path.exists(TXN_FILE):
     #     df = pd.read_csv(TXN_FILE)
     #     df["date"] = pd.to_datetime(df["date"]).dt.date
@@ -532,8 +531,8 @@ def save_budgets(df: pd.DataFrame) -> None:
         keep_cols = [c for c in ["id", "date", "category", "amount", "note"] if c in df.columns]
         return df[keep_cols]
     return pd.DataFrame(columns=["id", "date", "category", "amount", "note"])
-        df = pd.read_csv(TXN_FILE)
-        df["date"] = pd.to_datetime(df["date"]).dt.date
+
+
 def save_txn(txn_date, category, amount, note) -> None:
     supabase.table("transactions").insert(
         {"date": str(txn_date), "category": category, "amount": float(amount), "note": note}
@@ -542,10 +541,6 @@ def save_txn(txn_date, category, amount, note) -> None:
 
 def delete_txn(txn_id) -> None:
     supabase.table("transactions").delete().eq("id", txn_id).execute()
-
-
-def save_txns(df: pd.DataFrame) -> None:
-    df.to_csv(TXN_FILE, index=False)
 
 
 def month_filter(df: pd.DataFrame, y: int, m: int) -> pd.DataFrame:
@@ -936,6 +931,7 @@ else:
         .reset_index()
         .rename(columns={"amount": "total_spent"})
     )
+    
     annual_summary["avg_per_month"] = (annual_summary["total_spent"] / 12).round(2)
     budgets_for_annual = load_budgets()
     annual_summary = annual_summary.merge(budgets_for_annual, on="category", how="left")
@@ -955,8 +951,3 @@ else:
             "vs_annual_budget": st.column_config.NumberColumn("Remaining vs Budget", format="$%.2f"),
         }
     )
-
-
-
-
-
