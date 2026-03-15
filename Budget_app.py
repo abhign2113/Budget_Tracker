@@ -3,7 +3,7 @@
 # import streamlit as st
 # from datetime import date
 # import plotly.express as px
-# from supabase import create_client, Client
+#from supabase import create_client, Client
 
 # st.set_page_config(page_title="Budget Tracker", layout="wide")
 
@@ -426,7 +426,6 @@
 
 # NEw Code starts from here.
 
-
 import os
 import pandas as pd
 import streamlit as st
@@ -462,19 +461,42 @@ CATEGORIES = [
     "Dining",
     "Shopping",
     "Rent",
-    "Utilities",
-    "Car Insurance",
-    "Miscellaneous"
-]
-
+# NOTE: Switched app back to Supabase-backed storage.
+# BUDGET_FILE = "budgets.csv"
+# TXN_FILE = "transactions.csv"
+# SETTINGS_FILE = "settings.csv"  # stores monthly income
 BUDGET_FILE = "budgets.csv"
 TXN_FILE = "transactions.csv"
-SETTINGS_FILE = "settings.csv"  # stores monthly income
+SETTINGS_FILE = "settings.csv"
 
 
-def load_budgets() -> pd.DataFrame:
-    if os.path.exists(BUDGET_FILE):
-        df = pd.read_csv(BUDGET_FILE)
+# NOTE: Supabase client setup (reads credentials from Streamlit secrets).
+@st.cache_resource
+def get_supabase() -> Client:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+
+supabase = get_supabase()
+
+    "Utilities",
+TXN_FILE = "transactions.csv"
+    # NOTE: Original local-file loader retained for reference.
+    # if os.path.exists(BUDGET_FILE):
+    #     df = pd.read_csv(BUDGET_FILE)
+    #     existing = set(df["category"].tolist())
+    #     missing = [c for c in CATEGORIES if c not in existing]
+    #     if missing:
+    #         df = pd.concat(
+    #             [df, pd.DataFrame({"category": missing, "monthly_budget": [0.0] * len(missing)})],
+    #             ignore_index=True,
+    #         )
+    #     return df[["category", "monthly_budget"]].sort_values("category").reset_index(drop=True)
+    # return pd.DataFrame({"category": CATEGORIES, "monthly_budget": [0.0] * len(CATEGORIES)})
+    res = supabase.table("budgets").select("*").execute()
+    if res.data:
+        df = pd.DataFrame(res.data)[["category", "monthly_budget"]]
         existing = set(df["category"].tolist())
         missing = [c for c in CATEGORIES if c not in existing]
         if missing:
@@ -482,20 +504,44 @@ def load_budgets() -> pd.DataFrame:
                 [df, pd.DataFrame({"category": missing, "monthly_budget": [0.0] * len(missing)})],
                 ignore_index=True,
             )
-        return df[["category", "monthly_budget"]].sort_values("category").reset_index(drop=True)
+        return df.sort_values("category").reset_index(drop=True)
     return pd.DataFrame({"category": CATEGORIES, "monthly_budget": [0.0] * len(CATEGORIES)})
+                ignore_index=True,
+            )
+        return df[["category", "monthly_budget"]].sort_values("category").reset_index(drop=True)
+    # NOTE: Original local-file saver retained for reference.
+    # df.to_csv(BUDGET_FILE, index=False)
+    for _, row in df.iterrows():
+        supabase.table("budgets").upsert(
+            {"category": row["category"], "monthly_budget": float(row["monthly_budget"])},
+            on_conflict="category",
+        ).execute()
 
 
 def save_budgets(df: pd.DataFrame) -> None:
-    df.to_csv(BUDGET_FILE, index=False)
-
-
-def load_txns() -> pd.DataFrame:
-    if os.path.exists(TXN_FILE):
+    # NOTE: Original local-file loader retained for reference.
+    # if os.path.exists(TXN_FILE):
+    #     df = pd.read_csv(TXN_FILE)
+    #     df["date"] = pd.to_datetime(df["date"]).dt.date
+    #     return df
+    # return pd.DataFrame(columns=["date", "category", "amount", "note"])
+    res = supabase.table("transactions").select("*").order("date", desc=False).execute()
+    if res.data:
+        df = pd.DataFrame(res.data)
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+        keep_cols = [c for c in ["id", "date", "category", "amount", "note"] if c in df.columns]
+        return df[keep_cols]
+    return pd.DataFrame(columns=["id", "date", "category", "amount", "note"])
         df = pd.read_csv(TXN_FILE)
         df["date"] = pd.to_datetime(df["date"]).dt.date
-        return df
-    return pd.DataFrame(columns=["date", "category", "amount", "note"])
+def save_txn(txn_date, category, amount, note) -> None:
+    supabase.table("transactions").insert(
+        {"date": str(txn_date), "category": category, "amount": float(amount), "note": note}
+    ).execute()
+
+
+def delete_txn(txn_id) -> None:
+    supabase.table("transactions").delete().eq("id", txn_id).execute()
 
 
 def save_txns(df: pd.DataFrame) -> None:
@@ -510,18 +556,28 @@ def month_filter(df: pd.DataFrame, y: int, m: int) -> pd.DataFrame:
 
 
 def load_income() -> float:
-    if os.path.exists(SETTINGS_FILE):
-        s = pd.read_csv(SETTINGS_FILE)
-        if "monthly_income" in s.columns and len(s) > 0:
-            try:
-                return float(s.loc[0, "monthly_income"])
-            except Exception:
-                return 0.0
+    # NOTE: Original local-file loader retained for reference.
+    # if os.path.exists(SETTINGS_FILE):
+    #     s = pd.read_csv(SETTINGS_FILE)
+    #     if "monthly_income" in s.columns and len(s) > 0:
+    #         try:
+    #             return float(s.loc[0, "monthly_income"])
+    #         except Exception:
+    #             return 0.0
+    res = supabase.table("settings").select("*").execute()
+    if res.data:
+        return float(res.data[0].get("monthly_income", 0.0) or 0.0)
     return 0.0
 
 
 def save_income(value: float) -> None:
-    pd.DataFrame([{"monthly_income": float(value)}]).to_csv(SETTINGS_FILE, index=False)
+    # NOTE: Original local-file saver retained for reference.
+    # pd.DataFrame([{"monthly_income": float(value)}]).to_csv(SETTINGS_FILE, index=False)
+    res = supabase.table("settings").select("*").execute()
+    if res.data:
+        supabase.table("settings").update({"monthly_income": float(value)}).eq("id", res.data[0]["id"]).execute()
+    else:
+        supabase.table("settings").insert({"monthly_income": float(value)}).execute()
 
 
 st.title("💸 Personal Budget Tracker")
@@ -545,7 +601,9 @@ selected_categories = st.sidebar.multiselect(
 active_categories = selected_categories if selected_categories else CATEGORIES
 
 st.sidebar.markdown("---")
-st.sidebar.caption("Data is stored locally in budgets.csv, transactions.csv, settings.csv")
+# NOTE: Updated storage note after switching back to Supabase.
+# st.sidebar.caption("Data is stored locally in budgets.csv, transactions.csv, settings.csv")
+st.sidebar.caption("Data is stored in Supabase cloud database.")
 
 
 # --- Income ---
@@ -609,10 +667,13 @@ if submitted:
     if amt <= 0:
         st.error("Amount must be greater than 0.")
     else:
-        new_row = pd.DataFrame([{"date": txn_date, "category": cat, "amount": float(amt), "note": note}])
-        txns = pd.concat([txns, new_row], ignore_index=True)
-        save_txns(txns)
+        # NOTE: Original local append/save retained for reference.
+        # new_row = pd.DataFrame([{"date": txn_date, "category": cat, "amount": float(amt), "note": note}])
+        # txns = pd.concat([txns, new_row], ignore_index=True)
+        # save_txns(txns)
+        save_txn(txn_date, cat, amt, note)
         st.success("Transaction added!")
+        st.rerun()
 
 
 # reload month view after add
@@ -729,10 +790,16 @@ else:
         col3.write(f"${row['amount']}")
         col4.write(row["note"])
         if col5.button("Delete", key=i):
-            txns_all = load_txns()
-            txns_all = txns_all.drop(row["index"])
-            save_txns(txns_all)
-            st.rerun()
+            # NOTE: Original local delete retained for reference.
+            # txns_all = load_txns()
+            # txns_all = txns_all.drop(row["index"])
+            # save_txns(txns_all)
+            # st.rerun()
+            if "id" in row and pd.notna(row["id"]):
+                delete_txn(row["id"])
+                st.rerun()
+            else:
+                st.error("Could not delete row because transaction id is missing.")
 
 st.markdown("---")
 
@@ -756,10 +823,14 @@ if uploaded is not None:
                 st.error("Some rows have invalid categories. Fix these categories to match the app categories exactly:")
                 st.dataframe(bad[["date", "category", "amount"]].head(50), use_container_width=True, hide_index=True)
             else:
-                txns_all = load_txns()
-                txns_all = pd.concat([txns_all, imp[["date", "category", "amount", "note"]]], ignore_index=True)
-                save_txns(txns_all)
+                # NOTE: Original local import append retained for reference.
+                # txns_all = load_txns()
+                # txns_all = pd.concat([txns_all, imp[["date", "category", "amount", "note"]]], ignore_index=True)
+                # save_txns(txns_all)
+                for _, row in imp.iterrows():
+                    save_txn(row["date"], row["category"], row["amount"], row["note"])
                 st.success(f"Imported {len(imp)} transactions.")
+                st.rerun()
     except Exception as e:
         st.error(f"Could not import CSV: {e}")
 
@@ -884,5 +955,8 @@ else:
             "vs_annual_budget": st.column_config.NumberColumn("Remaining vs Budget", format="$%.2f"),
         }
     )
+
+
+
 
 
