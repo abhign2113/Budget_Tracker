@@ -432,6 +432,7 @@ import pandas as pd
 import streamlit as st
 from datetime import date
 import plotly.express as px
+from supabase import create_client, Client
 
 
 st.set_page_config(page_title="Budget Tracker", layout="wide")
