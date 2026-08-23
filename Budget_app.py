@@ -32,7 +32,6 @@ check_password()
 
 CATEGORIES = [
     "Groceries",
-    "Household Utilities",
     "Personal Care",
     "Dining",
     "Shopping",
