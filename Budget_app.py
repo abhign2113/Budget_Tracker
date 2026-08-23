@@ -528,12 +528,45 @@ else:
         .rename(columns={"amount": "total_spent"})
     )
     
+    #annual_summary["avg_per_month"] = (annual_summary["total_spent"] / 12).round(2)
+    #budgets_for_annual = load_budgets()
+    #annual_summary = annual_summary.merge(budgets_for_annual, on="category", how="left")
+    #annual_summary["annual_budget"] = annual_summary["monthly_budget"] * 12
+    #annual_summary["vs_annual_budget"] = annual_summary["annual_budget"] - annual_summary["total_spent"]
+    #annual_summary["status"] = annual_summary["vs_annual_budget"].apply(lambda x: "Over" if x < 0 else "OK")
+    
+#below code is the upadate I made on August 22 2026
     annual_summary["avg_per_month"] = (annual_summary["total_spent"] / 12).round(2)
     budgets_for_annual = load_budgets()
     annual_summary = annual_summary.merge(budgets_for_annual, on="category", how="left")
     annual_summary["annual_budget"] = annual_summary["monthly_budget"] * 12
     annual_summary["vs_annual_budget"] = annual_summary["annual_budget"] - annual_summary["total_spent"]
+
+    # NEW: Remaining budget for the rest of the year (current month through December)
+    current_month_int = int(month)
+    months_left = 12 - current_month_int + 1  # inclusive of current month
+
+    # Spent in the current month and after, per category
+    spent_from_current = (
+        txns_year[txns_year["month"] >= current_month_int]
+        .groupby("category")["amount"].sum()
+        .reindex(active_categories)
+        .fillna(0.0)
+        .reset_index()
+        .rename(columns={"amount": "spent_from_current"})
+    )
+    annual_summary = annual_summary.merge(spent_from_current, on="category", how="left").fillna({"spent_from_current": 0.0})
+    annual_summary["remaining_rest_of_year"] = (annual_summary["monthly_budget"] * months_left) - annual_summary["spent_from_current"]
+
     annual_summary["status"] = annual_summary["vs_annual_budget"].apply(lambda x: "Over" if x < 0 else "OK")
+
+
+
+
+
+
+
+    
 
     st.write(f"**Annual totals for {int(year)}**")
     st.dataframe(
