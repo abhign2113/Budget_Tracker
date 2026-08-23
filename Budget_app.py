@@ -422,6 +422,15 @@ st.markdown("---")
 # --- Annual Spending Visual ---
 st.subheader(f"6) Annual Spending — {int(year)}")
 
+# this change was added to it on August 22 2026
+st.write("DEBUG — txns rows:", len(txns))
+st.write("DEBUG — txns dtypes:", txns.dtypes.astype(str).to_dict() if not txns.empty else "empty")
+st.write("DEBUG — txns categories:", txns["category"].unique().tolist() if not txns.empty else "empty")
+st.write("DEBUG — active_categories:", active_categories)
+
+
+
+
 # Filter all transactions for the selected year
 txns_year = txns.copy()
 if not txns_year.empty:
