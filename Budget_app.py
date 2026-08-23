@@ -569,8 +569,12 @@ else:
     
 
     st.write(f"**Annual totals for {int(year)}**")
+
+    month_labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    rest_label = f"Remaining ({month_labels[current_month_int-1]}–Dec)"
+
     st.dataframe(
-        annual_summary[["category", "total_spent", "avg_per_month", "annual_budget", "vs_annual_budget", "status"]],
+        annual_summary[["category", "total_spent", "avg_per_month", "annual_budget", "vs_annual_budget", "remaining_rest_of_year", "status"]],
         use_container_width=True,
         hide_index=True,
         column_config={
@@ -578,5 +582,6 @@ else:
             "avg_per_month": st.column_config.NumberColumn("Avg/Month", format="$%.2f"),
             "annual_budget": st.column_config.NumberColumn("Annual Budget", format="$%.2f"),
             "vs_annual_budget": st.column_config.NumberColumn("Remaining vs Budget", format="$%.2f"),
+            "remaining_rest_of_year": st.column_config.NumberColumn(rest_label, format="$%.2f"),
         }
     )
